@@ -1,0 +1,447 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "addchain",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chain_name",
+                    "type": "name"
+                },
+                {
+                    "name": "bridge_contract",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "addtoken",
+            "base": "",
+            "fields": [
+                {
+                    "name": "token_contract_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "token_contract_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "token_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "chain_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "chain_domestic",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "blockchains",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chain_name",
+                    "type": "name"
+                },
+                {
+                    "name": "bridge_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "enabled",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "bridgers",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "user_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "sent_to_foreign",
+                    "type": "asset"
+                },
+                {
+                    "name": "received",
+                    "type": "asset"
+                },
+                {
+                    "name": "chain_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "contract_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "token_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "last_send_timestamp",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "claim",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "user_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "tx_id",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "config",
+            "base": "",
+            "fields": [
+                {
+                    "name": "all_lock_frozen",
+                    "type": "bool"
+                },
+                {
+                    "name": "all_unlock_frozen",
+                    "type": "bool"
+                },
+                {
+                    "name": "admin_contract",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "freezeall",
+            "base": "",
+            "fields": [
+                {
+                    "name": "lock_frozen",
+                    "type": "bool"
+                },
+                {
+                    "name": "unlock_frozen",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "lock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "user_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "log_claim",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chain_sender",
+                    "type": "name"
+                },
+                {
+                    "name": "user_sender",
+                    "type": "name"
+                },
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "tx_id",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "log_lock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chain_sender",
+                    "type": "name"
+                },
+                {
+                    "name": "user_sender",
+                    "type": "name"
+                },
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "tx_id",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "ontransfer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setadmin",
+            "base": "",
+            "fields": [
+                {
+                    "name": "new_admin",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "togglechain",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chain_name",
+                    "type": "name"
+                },
+                {
+                    "name": "enabled",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "togglelock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "freeze",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "toggleunlock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "freeze",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "tokens",
+            "base": "",
+            "fields": [
+                {
+                    "name": "token_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "token_contract_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "token_contract_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "token_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "chain_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "chain_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "lock_frozen",
+                    "type": "bool"
+                },
+                {
+                    "name": "unlock_frozen",
+                    "type": "bool"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addchain",
+            "type": "addchain",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addtoken",
+            "type": "addtoken",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "claim",
+            "type": "claim",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "freezeall",
+            "type": "freezeall",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "lock",
+            "type": "lock",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "ontransfer",
+            "type": "ontransfer",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setadmin",
+            "type": "setadmin",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "togglechain",
+            "type": "togglechain",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "togglelock",
+            "type": "togglelock",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "toggleunlock",
+            "type": "toggleunlock",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "blockchains",
+            "type": "blockchains",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "bridgers",
+            "type": "bridgers",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "config",
+            "type": "config",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "logclaim",
+            "type": "log_claim",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "loglock",
+            "type": "log_lock",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "tokens",
+            "type": "tokens",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "kv_tables": {},
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}
