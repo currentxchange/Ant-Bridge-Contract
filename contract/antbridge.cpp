@@ -11,48 +11,49 @@ Handles cross-chain token transfers and bridge management
 void antbridge::check_admin_auth() {
     config_singleton config_table(get_self(), get_self().value);
     auto cfg = config_table.get_or_create(get_self(), config{false, false, get_self()});
-    require_auth(cfg.admin_contract);
+    check(has_auth(cfg.admin_contract) || has_auth(get_self()), "🌉 Authorization failed. Must be admin or contract");
 }
 
 // --- Validation Helpers --- //
 void antbridge::validate_token(const uint64_t& token_id) {
     tokens_t tokens_table(get_self(), get_self().value);
     auto token_itr = tokens_table.find(token_id);
-    check(token_itr != tokens_table.end(), "Token not found");
+    check(token_itr != tokens_table.end(), "🌉 Token not found");
 }
 
 void antbridge::validate_chain(const name& chain_name) {
     blockchains_t blockchains_table(get_self(), get_self().value);
     auto chain_itr = blockchains_table.find(chain_name.value);
-    check(chain_itr != blockchains_table.end(), "Chain not found");
-    check(chain_itr->enabled, "Chain is disabled");
+    check(chain_itr != blockchains_table.end(), "🌉 Chain not found");
+    check(chain_itr->enabled, "🌉 Chain is disabled");
 }
 
 void antbridge::validate_quantity(const asset& quantity) {
-    check(quantity.is_valid(), "Invalid quantity");
-    check(quantity.amount > 0, "Quantity must be positive");
+    check(quantity.is_valid(), "🌉 Invalid quantity");
+    check(quantity.amount > 0, "🌉 Quantity must be positive");
 }
 
 // --- Logging Helpers --- //
-void antbridge::log_lock_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount, const checksum256& tx_id) {
+void antbridge::log_lock_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount) {
     log_lock_t log_lock_table(get_self(), get_self().value);
     log_lock_table.emplace(get_self(), [&](auto& row) {
+        row.id = log_lock_table.available_primary_key();
         row.chain_sender = chain_sender;
         row.user_sender = user_sender;
         row.token_id = token_id;
         row.amount = amount;
-        row.tx_id = tx_id;
     });
 }
 
 void antbridge::log_claim_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount, const checksum256& tx_id) {
     log_claim_t log_claim_table(get_self(), get_self().value);
     log_claim_table.emplace(get_self(), [&](auto& row) {
+        row.id = log_claim_table.available_primary_key();
+        row.tx_id = tx_id;
         row.chain_sender = chain_sender;
         row.user_sender = user_sender;
         row.token_id = token_id;
         row.amount = amount;
-        row.tx_id = tx_id;
     });
 }
 
@@ -67,11 +68,11 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
     // -- Check Frozen States -- //
     config_singleton config_table(get_self(), get_self().value);
     auto cfg = config_table.get_or_create(get_self(), config{false, false, get_self()});
-    check(!cfg.all_lock_frozen, "All locks are frozen");
+    check(!cfg.all_lock_frozen, "🌉 All locks are frozen");
 
     tokens_t tokens_table(get_self(), get_self().value);
     auto token_itr = tokens_table.find(token_id);
-    check(!token_itr->lock_frozen, "Token lock is frozen");
+    check(!token_itr->lock_frozen, "🌉 Token lock is frozen");
 
     // -- Transfer Tokens -- //
     action(
@@ -87,7 +88,7 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
     
     if (bridger_itr == bridgers_table.end()) {
         bridgers_table.emplace(get_self(), [&](auto& row) {
-            row.user_domestic = user_domestic;
+            row.user_domestic = user_domestic; 
             row.user_foreign = user_foreign;
             row.sent_to_foreign = quantity;
             row.received = asset(0, quantity.symbol);
@@ -104,30 +105,38 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
     }
 
     // -- Log Event -- //
-    log_lock_event(token_itr->chain_foreign, user_domestic, token_id, quantity, checksum256());
+    log_lock_event(token_itr->chain_foreign, user_domestic, token_id, quantity);
 }
 
 // --- Claim Action --- //
 ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const checksum256& tx_id) {
-    // -- Authorization and Validation -- //
-    require_auth(user_domestic);
+    // -- Authorization -- //
+    check_admin_auth();  // Only oracle (admin) can call this action
+
+    // -- Validation -- //
     validate_token(token_id);
     validate_quantity(quantity);
+
+    // -- Check if tx_id already used -- //
+    log_claim_t log_claim_table(get_self(), get_self().value);
+    auto claim_by_tx = log_claim_table.get_index<"bytxid"_n>();
+    auto existing_claim = claim_by_tx.find(tx_id);
+    check(existing_claim == claim_by_tx.end(), "🌉 Transaction ID already used");
 
     // -- Check Frozen States -- //
     config_singleton config_table(get_self(), get_self().value);
     auto cfg = config_table.get_or_create(get_self(), config{false, false, get_self()});
-    check(!cfg.all_unlock_frozen, "All unlocks are frozen");
+    check(!cfg.all_unlock_frozen, "🌉 All unlocks are frozen");
 
     tokens_t tokens_table(get_self(), get_self().value);
     auto token_itr = tokens_table.find(token_id);
-    check(!token_itr->unlock_frozen, "Token unlock is frozen");
+    check(!token_itr->unlock_frozen, "🌉 Token unlock is frozen");
 
     // -- Update Bridgers Table -- //
     bridgers_t bridgers_table(get_self(), get_self().value);
     auto bridger_itr = bridgers_table.find(user_domestic.value);
-    check(bridger_itr != bridgers_table.end(), "Bridger not found");
-    check(bridger_itr->received + quantity <= bridger_itr->sent_to_foreign, "Cannot claim more than sent");
+    check(bridger_itr != bridgers_table.end(), "🌉 Bridger not found");
+    check(bridger_itr->received + quantity <= bridger_itr->sent_to_foreign, "🌉 Cannot claim more than sent");
 
     bridgers_table.modify(bridger_itr, get_self(), [&](auto& row) {
         row.received += quantity;
@@ -240,9 +249,93 @@ ACTION antbridge::freezeall(const bool& lock_frozen, const bool& unlock_frozen) 
 ACTION antbridge::ontransfer(const name& from, const name& to, const asset& quantity, const string& memo) {
     if (to != get_self()) return;
     
-    // -- Parse Memo for Action -- //
-    if (memo == "lock") {
-        // TODO: Implement cross-chain transfer logic
-        // CHECK: Need to verify token contract and quantity
+    // Get the contract that sent the transfer notification
+    name token_contract = get_first_receiver();
+    
+    // Parse memo format "chain:user"
+    size_t colon_pos = memo.find(':');
+    check(colon_pos != string::npos, "🌉 Invalid memo format. Expected 'chain:user'");
+    
+    name chain_foreign = name(memo.substr(0, colon_pos));
+    name user_foreign = name(memo.substr(colon_pos + 1));
+    
+    // Validate chain exists
+    validate_chain(chain_foreign);
+    
+    // Validate user name format (1-12 chars, only a-z, 1-5, and .)
+    string user_str = user_foreign.to_string();
+    check(user_str.length() >= 1 && user_str.length() <= 12, "🌉 Foreign account name must be 1-12 characters");
+    check(user_str.find_first_not_of("abcdefghijklmnopqrstuvwxyz12345.") == string::npos, "🌉 Foreign account name contains invalid characters");
+    check(user_str.back() != '.', "🌉 Foreign account name cannot end with a dot");
+    
+    // Find token by contract and symbol
+    tokens_t tokens_table(get_self(), get_self().value);
+    auto token_by_contract = tokens_table.get_index<"bydomestic"_n>();
+    auto token_itr = token_by_contract.lower_bound(token_contract.value);
+    auto token_end = token_by_contract.upper_bound(token_contract.value);
+    
+    // Find the specific token with matching symbol
+    bool token_found = false;
+    while (token_itr != token_end) {
+        if (token_itr->token_symbol == quantity.symbol) {
+            token_found = true;
+            break;
+        }
+        token_itr++;
     }
+    
+    // Check if this is an allowed token
+    check(token_found, "🌉 Token contract and symbol combination not allowed");
+    
+    // Check if locks are frozen
+    config_singleton config_table(get_self(), get_self().value);
+    auto cfg = config_table.get_or_create(get_self(), config{false, false, get_self()});
+    check(!cfg.all_lock_frozen, "🌉 All locks are frozen");
+    check(!token_itr->lock_frozen, "🌉 Token lock is frozen");
+    
+    // Update bridgers table
+    bridgers_t bridgers_table(get_self(), get_self().value);
+    auto bridger_itr = bridgers_table.find(from.value);
+    
+    if (bridger_itr == bridgers_table.end()) {
+        bridgers_table.emplace(get_self(), [&](auto& row) {
+            row.user_domestic = from;
+            row.user_foreign = user_foreign;
+            row.sent_to_foreign = quantity;
+            row.received = asset(0, quantity.symbol);
+            row.chain_foreign = chain_foreign;
+            row.contract_foreign = token_itr->token_contract_foreign;
+            row.token_symbol = quantity.symbol;
+            row.last_send_timestamp = current_time_point().sec_since_epoch();
+        });
+    } else {
+        bridgers_table.modify(bridger_itr, get_self(), [&](auto& row) {
+            row.sent_to_foreign += quantity;
+            row.last_send_timestamp = current_time_point().sec_since_epoch();
+        });
+    }
+    
+    // Log the lock event
+    log_lock_event(token_itr->chain_foreign, from, token_itr->token_id, quantity);
 } //END ontransfer 
+
+// --- Cleanup Actions --- //
+ACTION antbridge::cleanuplock(const uint64_t& id) {
+    check_admin_auth();
+    
+    log_lock_t log_lock_table(get_self(), get_self().value);
+    auto lock_itr = log_lock_table.find(id);
+    check(lock_itr != log_lock_table.end(), "🌉 Lock log entry not found");
+    
+    log_lock_table.erase(lock_itr);
+}
+
+ACTION antbridge::cleanupclaim(const uint64_t& id) {
+    check_admin_auth();
+    
+    log_claim_t log_claim_table(get_self(), get_self().value);
+    auto claim_itr = log_claim_table.find(id);
+    check(claim_itr != log_claim_table.end(), "🌉 Claim log entry not found");
+    
+    log_claim_table.erase(claim_itr);
+} 

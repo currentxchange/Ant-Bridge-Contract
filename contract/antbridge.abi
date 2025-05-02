@@ -126,6 +126,26 @@
             ]
         },
         {
+            "name": "cleanupclaim",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "cleanuplock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "config",
             "base": "",
             "fields": [
@@ -184,6 +204,14 @@
             "base": "",
             "fields": [
                 {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "tx_id",
+                    "type": "checksum256"
+                },
+                {
                     "name": "chain_sender",
                     "type": "name"
                 },
@@ -198,10 +226,6 @@
                 {
                     "name": "amount",
                     "type": "asset"
-                },
-                {
-                    "name": "tx_id",
-                    "type": "checksum256"
                 }
             ]
         },
@@ -210,6 +234,10 @@
             "base": "",
             "fields": [
                 {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
                     "name": "chain_sender",
                     "type": "name"
                 },
@@ -224,10 +252,6 @@
                 {
                     "name": "amount",
                     "type": "asset"
-                },
-                {
-                    "name": "tx_id",
-                    "type": "checksum256"
                 }
             ]
         },
@@ -358,6 +382,16 @@
         {
             "name": "claim",
             "type": "claim",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cleanupclaim",
+            "type": "cleanupclaim",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cleanuplock",
+            "type": "cleanuplock",
             "ricardian_contract": ""
         },
         {

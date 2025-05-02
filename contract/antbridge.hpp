@@ -74,26 +74,28 @@ public:
     // --- Log Tables --- //
     // -- Lock Log Table -- //
     TABLE log_lock {
+        uint64_t id;
         name chain_sender;
         name user_sender;
         uint64_t token_id;
         asset amount;
-        checksum256 tx_id;
 
-        uint64_t primary_key() const { return uint64_t(tx_id.extract_as_byte_array()[0]); }
+        uint64_t primary_key() const { return id; }
         uint64_t by_chain() const { return chain_sender.value; }
         uint64_t by_user() const { return user_sender.value; }
     };
 
     // -- Claim Log Table -- //
     TABLE log_claim {
+        uint64_t id;
+        checksum256 tx_id;
         name chain_sender;
         name user_sender;
         uint64_t token_id;
         asset amount;
-        checksum256 tx_id;
 
-        uint64_t primary_key() const { return uint64_t(tx_id.extract_as_byte_array()[0]); }
+        uint64_t primary_key() const { return id; }
+        checksum256 by_tx_id() const { return tx_id; }
         uint64_t by_chain() const { return chain_sender.value; }
         uint64_t by_user() const { return user_sender.value; }
     };
@@ -119,6 +121,7 @@ public:
     > log_lock_t;
 
     typedef multi_index<"logclaim"_n, log_claim,
+        indexed_by<"bytxid"_n, const_mem_fun<log_claim, checksum256, &log_claim::by_tx_id>>,
         indexed_by<"bychain"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_chain>>,
         indexed_by<"byuser"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_user>>
     > log_claim_t;
@@ -138,6 +141,8 @@ public:
     ACTION addchain(const name& chain_name, const name& bridge_contract);
     ACTION togglechain(const name& chain_name, const bool& enabled);
     ACTION freezeall(const bool& lock_frozen, const bool& unlock_frozen);
+    ACTION cleanuplock(const uint64_t& id);
+    ACTION cleanupclaim(const uint64_t& id);
     
     // -- Transfer Handler -- //
     ACTION ontransfer(const name& from, const name& to, const asset& quantity, const string& memo);
@@ -152,6 +157,6 @@ public:
     void validate_quantity(const asset& quantity);
     
     // -- Logging Helpers -- //
-    void log_lock_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount, const checksum256& tx_id);
+    void log_lock_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount);
     void log_claim_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount, const checksum256& tx_id);
 }; 
