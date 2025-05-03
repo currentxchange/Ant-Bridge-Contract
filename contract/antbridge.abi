@@ -30,7 +30,11 @@
                     "type": "name"
                 },
                 {
-                    "name": "token_symbol",
+                    "name": "token_symbol_domestic",
+                    "type": "symbol"
+                },
+                {
+                    "name": "token_symbol_foreign",
                     "type": "symbol"
                 },
                 {
@@ -90,7 +94,11 @@
                     "type": "name"
                 },
                 {
-                    "name": "token_symbol",
+                    "name": "token_symbol_domestic",
+                    "type": "symbol"
+                },
+                {
+                    "name": "token_symbol_foreign",
                     "type": "symbol"
                 },
                 {
@@ -346,7 +354,11 @@
                     "type": "name"
                 },
                 {
-                    "name": "token_symbol",
+                    "name": "token_symbol_domestic",
+                    "type": "symbol"
+                },
+                {
+                    "name": "token_symbol_foreign",
                     "type": "symbol"
                 },
                 {
