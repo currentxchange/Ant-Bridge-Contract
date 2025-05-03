@@ -94,7 +94,8 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
             row.received = asset(0, quantity.symbol);
             row.chain_foreign = token_itr->chain_foreign;
             row.contract_foreign = token_itr->token_contract_foreign;
-            row.token_symbol = quantity.symbol;
+            row.token_symbol_domestic = token_itr->token_symbol_domestic;
+            row.token_symbol_foreign = token_itr->token_symbol_foreign;
             row.last_send_timestamp = current_time_point().sec_since_epoch();
         });
     } else {
@@ -156,7 +157,7 @@ ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, con
 
 // === Token Management Actions === //
 // --- Add Token Action --- //
-ACTION antbridge::addtoken(const name& token_contract_foreign, const name& token_contract_domestic, const symbol& token_symbol, const name& chain_foreign, const name& chain_domestic) {
+ACTION antbridge::addtoken(const name& token_contract_foreign, const name& token_contract_domestic, const symbol& token_symbol_domestic, const symbol& token_symbol_foreign, const name& chain_foreign, const name& chain_domestic) {
     check_admin_auth();
     validate_chain(chain_foreign);
     validate_chain(chain_domestic);
@@ -166,7 +167,8 @@ ACTION antbridge::addtoken(const name& token_contract_foreign, const name& token
         row.token_id = tokens_table.available_primary_key();
         row.token_contract_foreign = token_contract_foreign;
         row.token_contract_domestic = token_contract_domestic;
-        row.token_symbol = token_symbol;
+        row.token_symbol_domestic = token_symbol_domestic;
+        row.token_symbol_foreign = token_symbol_foreign;
         row.chain_domestic = chain_domestic;
         row.chain_foreign = chain_foreign;
         row.lock_frozen = false;
@@ -274,10 +276,10 @@ ACTION antbridge::ontransfer(const name& from, const name& to, const asset& quan
     auto token_itr = token_by_contract.lower_bound(token_contract.value);
     auto token_end = token_by_contract.upper_bound(token_contract.value);
     
-    // Find the specific token with matching symbol
+    // Find the specific token with matching domestic symbol
     bool token_found = false;
     while (token_itr != token_end) {
-        if (token_itr->token_symbol == quantity.symbol) {
+        if (token_itr->token_symbol_domestic == quantity.symbol) {
             token_found = true;
             break;
         }
@@ -305,7 +307,8 @@ ACTION antbridge::ontransfer(const name& from, const name& to, const asset& quan
             row.received = asset(0, quantity.symbol);
             row.chain_foreign = chain_foreign;
             row.contract_foreign = token_itr->token_contract_foreign;
-            row.token_symbol = quantity.symbol;
+            row.token_symbol_domestic = token_itr->token_symbol_domestic;
+            row.token_symbol_foreign = token_itr->token_symbol_foreign;
             row.last_send_timestamp = current_time_point().sec_since_epoch();
         });
     } else {

@@ -29,7 +29,8 @@ public:
         asset received;
         name chain_foreign;
         name contract_foreign;
-        symbol token_symbol;
+        symbol token_symbol_domestic;
+        symbol token_symbol_foreign;
         uint32_t last_send_timestamp;
 
         uint64_t primary_key() const { return user_domestic.value; }
@@ -51,7 +52,8 @@ public:
         uint64_t token_id;
         name token_contract_foreign;
         name token_contract_domestic;
-        symbol token_symbol;
+        symbol token_symbol_domestic;
+        symbol token_symbol_foreign;
         name chain_domestic;
         name chain_foreign;
         bool lock_frozen;
@@ -132,7 +134,7 @@ public:
     ACTION claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const checksum256& tx_id);
     
     // -- Token Management Actions -- //
-    ACTION addtoken(const name& token_contract_foreign, const name& token_contract_domestic, const symbol& token_symbol, const name& chain_foreign, const name& chain_domestic);
+    ACTION addtoken(const name& token_contract_foreign, const name& token_contract_domestic, const symbol& token_symbol_domestic, const symbol& token_symbol_foreign, const name& chain_foreign, const name& chain_domestic);
     ACTION togglelock(const uint64_t& token_id, const bool& freeze);
     ACTION toggleunlock(const uint64_t& token_id, const bool& freeze);
     
