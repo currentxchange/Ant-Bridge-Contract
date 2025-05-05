@@ -147,7 +147,7 @@ public:
     ACTION cleanupclaim(const uint64_t& id);
     
     // -- Transfer Handler -- //
-    ACTION ontransfer(const name& from, const name& to, const asset& quantity, const string& memo);
+    [[eosio::on_notify("*::transfer")]] void ontransfer(const name& from, const name& to, const asset& quantity, const string& memo);
 
     // === Helper Functions === //
     // -- Authorization Helpers -- //

@@ -248,15 +248,21 @@ ACTION antbridge::freezeall(const bool& lock_frozen, const bool& unlock_frozen) 
 
 // === Transfer Handler === //
 // --- On Transfer Action --- //
-ACTION antbridge::ontransfer(const name& from, const name& to, const asset& quantity, const string& memo) {
+[[eosio::on_notify("*::transfer")]] void antbridge::ontransfer(const name& from, const name& to, const asset& quantity, const string& memo) {
     if (to != get_self()) return;
     
     // Get the contract that sent the transfer notification
     name token_contract = get_first_receiver();
     
+    // Handle the special case for "deposit" memo
+    if (memo == "deposit") {
+        // Accept transactions with memo "deposit" without further processing
+        return;
+    }
+    
     // Parse memo format "chain:user"
     size_t colon_pos = memo.find(':');
-    check(colon_pos != string::npos, "🌉 Invalid memo format. Expected 'chain:user'");
+    check(colon_pos != string::npos, "🌉 Invalid memo format. Expected 'chain:user' or 'deposit'");
     
     name chain_foreign = name(memo.substr(0, colon_pos));
     name user_foreign = name(memo.substr(colon_pos + 1));
@@ -320,7 +326,7 @@ ACTION antbridge::ontransfer(const name& from, const name& to, const asset& quan
     
     // Log the lock event
     log_lock_event(token_itr->chain_foreign, from, token_itr->token_id, quantity);
-} //END ontransfer 
+} //END ontransfer
 
 // --- Cleanup Actions --- //
 ACTION antbridge::cleanuplock(const uint64_t& id) {

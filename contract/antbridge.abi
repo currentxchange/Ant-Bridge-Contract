@@ -264,28 +264,6 @@
             ]
         },
         {
-            "name": "ontransfer",
-            "base": "",
-            "fields": [
-                {
-                    "name": "from",
-                    "type": "name"
-                },
-                {
-                    "name": "to",
-                    "type": "name"
-                },
-                {
-                    "name": "quantity",
-                    "type": "asset"
-                },
-                {
-                    "name": "memo",
-                    "type": "string"
-                }
-            ]
-        },
-        {
             "name": "setadmin",
             "base": "",
             "fields": [
@@ -414,11 +392,6 @@
         {
             "name": "lock",
             "type": "lock",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "ontransfer",
-            "type": "ontransfer",
             "ricardian_contract": ""
         },
         {
