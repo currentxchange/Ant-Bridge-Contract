@@ -84,10 +84,29 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
 
     // -- Update Bridgers Table -- //
     bridgers_t bridgers_table(get_self(), get_self().value);
-    auto bridger_itr = bridgers_table.find(user_domestic.value);
     
-    if (bridger_itr == bridgers_table.end()) {
+    // Check for existing bridger by domestic user, foreign user, and chain
+    auto by_domestic = bridgers_table.get_index<"bydomestic"_n>();
+    auto range_begin = by_domestic.lower_bound(user_domestic.value);
+    auto range_end = by_domestic.upper_bound(user_domestic.value);
+    
+    bool found = false;
+    auto bridger_itr = range_begin;
+    
+    // Look for a match with the same domestic user, foreign user, and chain
+    while (bridger_itr != range_end) {
+        if (bridger_itr->user_foreign == user_foreign && 
+            bridger_itr->chain_foreign == token_itr->chain_foreign) {
+            found = true;
+            break;
+        }
+        bridger_itr++;
+    }
+    
+    if (!found) {
+        // Create new bridger entry
         bridgers_table.emplace(get_self(), [&](auto& row) {
+            row.id = bridgers_table.available_primary_key();
             row.user_domestic = user_domestic; 
             row.user_foreign = user_foreign;
             row.sent_to_foreign = quantity;
@@ -99,7 +118,8 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
             row.last_send_timestamp = current_time_point().sec_since_epoch();
         });
     } else {
-        bridgers_table.modify(bridger_itr, get_self(), [&](auto& row) {
+        // Update existing bridger entry
+        by_domestic.modify(bridger_itr, get_self(), [&](auto& row) {
             row.sent_to_foreign += quantity;
             row.last_send_timestamp = current_time_point().sec_since_epoch();
         });
@@ -135,11 +155,29 @@ ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, con
 
     // -- Update Bridgers Table -- //
     bridgers_t bridgers_table(get_self(), get_self().value);
-    auto bridger_itr = bridgers_table.find(user_domestic.value);
-    check(bridger_itr != bridgers_table.end(), "🌉 Bridger not found");
+    
+    // Find bridger by domestic user, foreign user, and chain
+    auto by_domestic = bridgers_table.get_index<"bydomestic"_n>();
+    auto range_begin = by_domestic.lower_bound(user_domestic.value);
+    auto range_end = by_domestic.upper_bound(user_domestic.value);
+    
+    bool found = false;
+    auto bridger_itr = range_begin;
+    
+    // Look for a match with the same domestic user, foreign user, and token's chain
+    while (bridger_itr != range_end) {
+        if (bridger_itr->user_foreign == user_foreign && 
+            bridger_itr->chain_foreign == token_itr->chain_foreign) {
+            found = true;
+            break;
+        }
+        bridger_itr++;
+    }
+    
+    check(found, "🌉 Bridger not found");
     check(bridger_itr->received + quantity <= bridger_itr->sent_to_foreign, "🌉 Cannot claim more than sent");
 
-    bridgers_table.modify(bridger_itr, get_self(), [&](auto& row) {
+    by_domestic.modify(bridger_itr, get_self(), [&](auto& row) {
         row.received += quantity;
     });
 
@@ -303,10 +341,29 @@ ACTION antbridge::freezeall(const bool& lock_frozen, const bool& unlock_frozen) 
     
     // Update bridgers table
     bridgers_t bridgers_table(get_self(), get_self().value);
-    auto bridger_itr = bridgers_table.find(from.value);
     
-    if (bridger_itr == bridgers_table.end()) {
+    // Check for existing bridger by domestic user, foreign user, and chain
+    auto by_domestic = bridgers_table.get_index<"bydomestic"_n>();
+    auto range_begin = by_domestic.lower_bound(from.value);
+    auto range_end = by_domestic.upper_bound(from.value);
+    
+    bool found = false;
+    auto bridger_itr = range_begin;
+    
+    // Look for a match with the same domestic user, foreign user, and chain
+    while (bridger_itr != range_end) {
+        if (bridger_itr->user_foreign == user_foreign && 
+            bridger_itr->chain_foreign == chain_foreign) {
+            found = true;
+            break;
+        }
+        bridger_itr++;
+    }
+    
+    if (!found) {
+        // Create new bridger entry
         bridgers_table.emplace(get_self(), [&](auto& row) {
+            row.id = bridgers_table.available_primary_key();
             row.user_domestic = from;
             row.user_foreign = user_foreign;
             row.sent_to_foreign = quantity;
@@ -318,7 +375,8 @@ ACTION antbridge::freezeall(const bool& lock_frozen, const bool& unlock_frozen) 
             row.last_send_timestamp = current_time_point().sec_since_epoch();
         });
     } else {
-        bridgers_table.modify(bridger_itr, get_self(), [&](auto& row) {
+        // Update existing bridger entry
+        by_domestic.modify(bridger_itr, get_self(), [&](auto& row) {
             row.sent_to_foreign += quantity;
             row.last_send_timestamp = current_time_point().sec_since_epoch();
         });

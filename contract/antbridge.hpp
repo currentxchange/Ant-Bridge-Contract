@@ -23,6 +23,7 @@ public:
 
     // --- Bridgers Table --- //
     TABLE bridgers {
+        uint64_t id;
         name user_domestic;
         name user_foreign;
         asset sent_to_foreign;
@@ -33,7 +34,8 @@ public:
         symbol token_symbol_foreign;
         uint32_t last_send_timestamp;
 
-        uint64_t primary_key() const { return user_domestic.value; }
+        uint64_t primary_key() const { return id; }
+        uint64_t by_domestic() const { return user_domestic.value; }
         uint64_t by_foreign() const { return user_foreign.value; }
         uint64_t by_chain() const { return chain_foreign.value; }
     };
@@ -104,6 +106,7 @@ public:
 
     // === Multi-index Declarations === //
     typedef multi_index<"bridgers"_n, bridgers,
+        indexed_by<"bydomestic"_n, const_mem_fun<bridgers, uint64_t, &bridgers::by_domestic>>,
         indexed_by<"byforeign"_n, const_mem_fun<bridgers, uint64_t, &bridgers::by_foreign>>,
         indexed_by<"bychain"_n, const_mem_fun<bridgers, uint64_t, &bridgers::by_chain>>
     > bridgers_t;

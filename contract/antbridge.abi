@@ -70,6 +70,10 @@
             "base": "",
             "fields": [
                 {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
                     "name": "user_domestic",
                     "type": "name"
                 },
