@@ -201,6 +201,22 @@ ACTION antbridge::addtoken(const name& token_contract_foreign, const name& token
     validate_chain(chain_domestic);
 
     tokens_t tokens_table(get_self(), get_self().value);
+    
+    // Check for duplicate token configuration
+    // Iterate through the table using proper EOSIO iteration pattern
+    auto itr = tokens_table.begin();
+    while (itr != tokens_table.end()) {
+        // Check if the same domestic and foreign token pair already exists
+        if (itr->token_contract_domestic == token_contract_domestic && 
+            itr->token_symbol_domestic == token_symbol_domestic &&
+            itr->token_contract_foreign == token_contract_foreign && 
+            itr->token_symbol_foreign == token_symbol_foreign &&
+            itr->chain_foreign == chain_foreign) {
+            check(false, "🌉 Token with identical domestic and foreign details already exists");
+        }
+        itr++;
+    }
+    
     tokens_table.emplace(get_self(), [&](auto& row) {
         row.token_id = tokens_table.available_primary_key();
         row.token_contract_foreign = token_contract_foreign;
