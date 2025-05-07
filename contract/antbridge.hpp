@@ -79,29 +79,37 @@ public:
     // -- Lock Log Table -- //
     TABLE log_lock {
         uint64_t id;
-        name chain_sender;
-        name user_sender;
+        name chain_foreign;
+        name chain_domestic;
+        name user_foreign;
+        name user_domestic;
         uint64_t token_id;
         asset amount;
 
         uint64_t primary_key() const { return id; }
-        uint64_t by_chain() const { return chain_sender.value; }
-        uint64_t by_user() const { return user_sender.value; }
+        uint64_t by_chain_foreign() const { return chain_foreign.value; }
+        uint64_t by_chain_domestic() const { return chain_domestic.value; }
+        uint64_t by_user_foreign() const { return user_foreign.value; }
+        uint64_t by_user_domestic() const { return user_domestic.value; }
     };
 
     // -- Claim Log Table -- //
     TABLE log_claim {
         uint64_t id;
-        checksum256 tx_id;
-        name chain_sender;
-        name user_sender;
+        uint64_t foreign_lock_id;
+        name chain_foreign;
+        name chain_domestic;
+        name user_foreign;
+        name user_domestic;
         uint64_t token_id;
         asset amount;
 
         uint64_t primary_key() const { return id; }
-        checksum256 by_tx_id() const { return tx_id; }
-        uint64_t by_chain() const { return chain_sender.value; }
-        uint64_t by_user() const { return user_sender.value; }
+        uint64_t by_foreign_lock() const { return foreign_lock_id; }
+        uint64_t by_chain_foreign() const { return chain_foreign.value; }
+        uint64_t by_chain_domestic() const { return chain_domestic.value; }
+        uint64_t by_user_foreign() const { return user_foreign.value; }
+        uint64_t by_user_domestic() const { return user_domestic.value; }
     };
 
     // === Multi-index Declarations === //
@@ -121,20 +129,24 @@ public:
     typedef multi_index<"blockchains"_n, blockchains> blockchains_t;
 
     typedef multi_index<"loglock"_n, log_lock,
-        indexed_by<"bychain"_n, const_mem_fun<log_lock, uint64_t, &log_lock::by_chain>>,
-        indexed_by<"byuser"_n, const_mem_fun<log_lock, uint64_t, &log_lock::by_user>>
+        indexed_by<"bychainf"_n, const_mem_fun<log_lock, uint64_t, &log_lock::by_chain_foreign>>,
+        indexed_by<"bychaind"_n, const_mem_fun<log_lock, uint64_t, &log_lock::by_chain_domestic>>,
+        indexed_by<"byuserf"_n, const_mem_fun<log_lock, uint64_t, &log_lock::by_user_foreign>>,
+        indexed_by<"byuserd"_n, const_mem_fun<log_lock, uint64_t, &log_lock::by_user_domestic>>
     > log_lock_t;
 
     typedef multi_index<"logclaim"_n, log_claim,
-        indexed_by<"bytxid"_n, const_mem_fun<log_claim, checksum256, &log_claim::by_tx_id>>,
-        indexed_by<"bychain"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_chain>>,
-        indexed_by<"byuser"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_user>>
+        indexed_by<"byfgnlock"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_foreign_lock>>,
+        indexed_by<"bychainf"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_chain_foreign>>,
+        indexed_by<"bychaind"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_chain_domestic>>,
+        indexed_by<"byuserf"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_user_foreign>>,
+        indexed_by<"byuserd"_n, const_mem_fun<log_claim, uint64_t, &log_claim::by_user_domestic>>
     > log_claim_t;
 
     // === Actions === //
     // -- Core Bridge Actions -- //
     ACTION lock(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity);
-    ACTION claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const checksum256& tx_id);
+    ACTION claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const uint64_t& foreign_lock_id);
     
     // -- Token Management Actions -- //
     ACTION addtoken(const name& token_contract_foreign, const name& token_contract_domestic, const symbol& token_symbol_domestic, const symbol& token_symbol_foreign, const name& chain_foreign, const name& chain_domestic);
@@ -162,6 +174,6 @@ public:
     void validate_quantity(const asset& quantity);
     
     // -- Logging Helpers -- //
-    void log_lock_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount);
-    void log_claim_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount, const checksum256& tx_id);
+    void log_lock_event(const name& chain_foreign, const name& chain_domestic, const name& user_foreign, const name& user_domestic, const uint64_t& token_id, const asset& amount);
+    void log_claim_event(const name& chain_foreign, const name& chain_domestic, const name& user_foreign, const name& user_domestic, const uint64_t& token_id, const asset& amount, const uint64_t& foreign_lock_id);
 }; 

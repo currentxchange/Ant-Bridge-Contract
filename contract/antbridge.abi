@@ -132,8 +132,8 @@
                     "type": "asset"
                 },
                 {
-                    "name": "tx_id",
-                    "type": "checksum256"
+                    "name": "foreign_lock_id",
+                    "type": "uint64"
                 }
             ]
         },
@@ -220,15 +220,23 @@
                     "type": "uint64"
                 },
                 {
-                    "name": "tx_id",
-                    "type": "checksum256"
+                    "name": "foreign_lock_id",
+                    "type": "uint64"
                 },
                 {
-                    "name": "chain_sender",
+                    "name": "chain_foreign",
                     "type": "name"
                 },
                 {
-                    "name": "user_sender",
+                    "name": "chain_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "user_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "user_domestic",
                     "type": "name"
                 },
                 {
@@ -250,11 +258,19 @@
                     "type": "uint64"
                 },
                 {
-                    "name": "chain_sender",
+                    "name": "chain_foreign",
                     "type": "name"
                 },
                 {
-                    "name": "user_sender",
+                    "name": "chain_domestic",
+                    "type": "name"
+                },
+                {
+                    "name": "user_foreign",
+                    "type": "name"
+                },
+                {
+                    "name": "user_domestic",
                     "type": "name"
                 },
                 {

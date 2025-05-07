@@ -34,24 +34,28 @@ void antbridge::validate_quantity(const asset& quantity) {
 }
 
 // --- Logging Helpers --- //
-void antbridge::log_lock_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount) {
+void antbridge::log_lock_event(const name& chain_foreign, const name& chain_domestic, const name& user_foreign, const name& user_domestic, const uint64_t& token_id, const asset& amount) {
     log_lock_t log_lock_table(get_self(), get_self().value);
     log_lock_table.emplace(get_self(), [&](auto& row) {
         row.id = log_lock_table.available_primary_key();
-        row.chain_sender = chain_sender;
-        row.user_sender = user_sender;
+        row.chain_foreign = chain_foreign;
+        row.chain_domestic = chain_domestic;
+        row.user_foreign = user_foreign;
+        row.user_domestic = user_domestic;
         row.token_id = token_id;
         row.amount = amount;
     });
 }
 
-void antbridge::log_claim_event(const name& chain_sender, const name& user_sender, const uint64_t& token_id, const asset& amount, const checksum256& tx_id) {
+void antbridge::log_claim_event(const name& chain_foreign, const name& chain_domestic, const name& user_foreign, const name& user_domestic, const uint64_t& token_id, const asset& amount, const uint64_t& foreign_lock_id) {
     log_claim_t log_claim_table(get_self(), get_self().value);
     log_claim_table.emplace(get_self(), [&](auto& row) {
         row.id = log_claim_table.available_primary_key();
-        row.tx_id = tx_id;
-        row.chain_sender = chain_sender;
-        row.user_sender = user_sender;
+        row.foreign_lock_id = foreign_lock_id;
+        row.chain_foreign = chain_foreign;
+        row.chain_domestic = chain_domestic;
+        row.user_foreign = user_foreign;
+        row.user_domestic = user_domestic;
         row.token_id = token_id;
         row.amount = amount;
     });
@@ -126,11 +130,11 @@ ACTION antbridge::lock(const name& user_domestic, const name& user_foreign, cons
     }
 
     // -- Log Event -- //
-    log_lock_event(token_itr->chain_foreign, user_domestic, token_id, quantity);
+    log_lock_event(token_itr->chain_foreign, token_itr->chain_domestic, user_foreign, user_domestic, token_itr->token_id, quantity);
 }
 
 // --- Claim Action --- //
-ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const checksum256& tx_id) {
+ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const uint64_t& foreign_lock_id) {
     // -- Authorization -- //
     check_admin_auth();  // Only oracle (admin) can call this action
 
@@ -138,11 +142,11 @@ ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, con
     validate_token(token_id);
     validate_quantity(quantity);
 
-    // -- Check if tx_id already used -- //
+    // -- Check if foreign_lock_id already used -- //
     log_claim_t log_claim_table(get_self(), get_self().value);
-    auto claim_by_tx = log_claim_table.get_index<"bytxid"_n>();
-    auto existing_claim = claim_by_tx.find(tx_id);
-    check(existing_claim == claim_by_tx.end(), "🌉 Transaction ID already used");
+    auto claim_by_foreign_lock = log_claim_table.get_index<"byfgnlock"_n>();
+    auto existing_claim = claim_by_foreign_lock.find(foreign_lock_id);
+    check(existing_claim == claim_by_foreign_lock.end(), "🌉 Foreign lock ID already used");
 
     // -- Check Frozen States -- //
     config_singleton config_table(get_self(), get_self().value);
@@ -190,7 +194,6 @@ ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, con
         });
     } else {
         // Update existing bridger entry
-        check(bridger_itr->received + quantity <= bridger_itr->sent_to_foreign, "🌉 Cannot claim more than sent");
         by_domestic.modify(bridger_itr, get_self(), [&](auto& row) {
             row.received += quantity;
         });
@@ -205,7 +208,7 @@ ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, con
     ).send();
 
     // -- Log Event -- //
-    log_claim_event(token_itr->chain_foreign, user_domestic, token_id, quantity, tx_id);
+    log_claim_event(token_itr->chain_foreign, token_itr->chain_domestic, user_foreign, user_domestic, token_itr->token_id, quantity, foreign_lock_id);
 }
 
 // === Token Management Actions === //
@@ -414,7 +417,7 @@ ACTION antbridge::freezeall(const bool& lock_frozen, const bool& unlock_frozen) 
     }
     
     // Log the lock event
-    log_lock_event(token_itr->chain_foreign, from, token_itr->token_id, quantity);
+    log_lock_event(chain_foreign, token_itr->chain_domestic, user_foreign, from, token_itr->token_id, quantity);
 } //END ontransfer
 
 // --- Cleanup Actions --- //
