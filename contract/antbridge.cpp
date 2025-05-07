@@ -174,12 +174,27 @@ ACTION antbridge::claim(const name& user_domestic, const name& user_foreign, con
         bridger_itr++;
     }
     
-    check(found, "🌉 Bridger not found");
-    check(bridger_itr->received + quantity <= bridger_itr->sent_to_foreign, "🌉 Cannot claim more than sent");
-
-    by_domestic.modify(bridger_itr, get_self(), [&](auto& row) {
-        row.received += quantity;
-    });
+    if (!found) {
+        // Create new bridger entry for first-time claim
+        bridgers_table.emplace(get_self(), [&](auto& row) {
+            row.id = bridgers_table.available_primary_key();
+            row.user_domestic = user_domestic;
+            row.user_foreign = user_foreign;
+            row.sent_to_foreign = asset(0, quantity.symbol);  // No previous sends
+            row.received = quantity;  // First claim
+            row.chain_foreign = token_itr->chain_foreign;
+            row.contract_foreign = token_itr->token_contract_foreign;
+            row.token_symbol_domestic = token_itr->token_symbol_domestic;
+            row.token_symbol_foreign = token_itr->token_symbol_foreign;
+            row.last_send_timestamp = current_time_point().sec_since_epoch();
+        });
+    } else {
+        // Update existing bridger entry
+        check(bridger_itr->received + quantity <= bridger_itr->sent_to_foreign, "🌉 Cannot claim more than sent");
+        by_domestic.modify(bridger_itr, get_self(), [&](auto& row) {
+            row.received += quantity;
+        });
+    }
 
     // -- Transfer Tokens -- //
     action(
