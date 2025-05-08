@@ -284,6 +284,30 @@
             ]
         },
         {
+            "name": "oracleupdate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "log_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "action_context",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "refund",
+            "base": "",
+            "fields": [
+                {
+                    "name": "log_lock_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "setadmin",
             "base": "",
             "fields": [
@@ -412,6 +436,16 @@
         {
             "name": "lock",
             "type": "lock",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "oracleupdate",
+            "type": "oracleupdate",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "refund",
+            "type": "refund",
             "ricardian_contract": ""
         },
         {

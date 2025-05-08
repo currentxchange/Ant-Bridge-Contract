@@ -6,8 +6,9 @@
 #include <eosio/singleton.hpp>
 #include <eosio/time.hpp>
 
+// === AntBridge Contract Overview === //
+// --- Cross-Chain Token Bridge Contract --- //
 /*/
-AntBridge - Cross-Chain Token Bridge Contract
 A secure and efficient bridge for transferring tokens between different blockchains
 /*/
 
@@ -147,6 +148,7 @@ public:
     // -- Core Bridge Actions -- //
     ACTION lock(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity);
     ACTION claim(const name& user_domestic, const name& user_foreign, const uint64_t& token_id, const asset& quantity, const uint64_t& foreign_lock_id);
+    ACTION oracleupdate(const uint64_t& log_id, const name& action_context);
     
     // -- Token Management Actions -- //
     ACTION addtoken(const name& token_contract_foreign, const name& token_contract_domestic, const symbol& token_symbol_domestic, const symbol& token_symbol_foreign, const name& chain_foreign, const name& chain_domestic);
@@ -160,6 +162,7 @@ public:
     ACTION freezeall(const bool& lock_frozen, const bool& unlock_frozen);
     ACTION cleanuplock(const uint64_t& id);
     ACTION cleanupclaim(const uint64_t& id);
+    ACTION refund(const uint64_t& log_lock_id);
     
     // -- Transfer Handler -- //
     [[eosio::on_notify("*::transfer")]] void ontransfer(const name& from, const name& to, const asset& quantity, const string& memo);
